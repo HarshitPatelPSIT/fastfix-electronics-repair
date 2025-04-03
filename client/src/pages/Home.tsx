@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight, Wrench } from 'lucide-react';
+import { ArrowRight, Wrench, Calculator, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DeviceCategories from '@/components/layout/DeviceCategories';
 import WhyChooseUs from '@/components/layout/WhyChooseUs';
@@ -52,6 +52,35 @@ const Home = () => {
 
       {/* Device Categories */}
       <DeviceCategories />
+
+      {/* Repair Calculator CTA */}
+      <section className="bg-primary text-white py-12">
+        <div className="container mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="md:w-2/3 mb-6 md:mb-0">
+              <h2 className="text-2xl md:text-3xl font-bold mb-2">Get an Instant Repair Estimate</h2>
+              <p className="text-white/80">
+                Try our new interactive repair calculator to get a quick estimate for your device repair.
+                Just answer a few simple questions about your device and issue.
+              </p>
+            </div>
+            <div className="md:w-1/3 text-center">
+              <Button 
+                asChild
+                size="lg" 
+                variant="secondary"
+                className="group bg-white text-primary hover:bg-white/90"
+              >
+                <Link href="/calculator">
+                  <Calculator className="mr-2 h-5 w-5 group-hover:animate-bounce" />
+                  <span>Repair Calculator</span>
+                  <DollarSign className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Why Choose Us */}
       <WhyChooseUs />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,6 +6,8 @@ import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { ArrowRight, Calculator } from 'lucide-react';
+import { Link } from 'wouter';
 import {
   Form,
   FormControl,
@@ -38,9 +40,63 @@ const bookingFormSchema = insertRepairSchema.extend({
 
 type BookingFormValues = z.infer<typeof bookingFormSchema>;
 
+// Interface for the repair estimate data from calculator
+interface RepairEstimate {
+  deviceType: string;
+  deviceBrand: string;
+  issueType: string;
+  estimatedPrice: number;
+  estimatedTime: string;
+  addons: string[];
+}
+
 const Booking = () => {
   const [trackingId, setTrackingId] = useState('');
+  const [hasEstimate, setHasEstimate] = useState(false);
+  const [estimateData, setEstimateData] = useState<RepairEstimate | null>(null);
   const { toast } = useToast();
+
+  // Load estimate data from localStorage, if it exists
+  useEffect(() => {
+    const savedEstimate = localStorage.getItem('repairEstimate');
+    if (savedEstimate) {
+      try {
+        const parsedEstimate = JSON.parse(savedEstimate) as RepairEstimate;
+        setEstimateData(parsedEstimate);
+        setHasEstimate(true);
+        
+        // Pre-fill the form with data from estimate
+        form.setValue('deviceType', convertDeviceType(parsedEstimate.deviceType));
+        form.setValue('deviceModel', parsedEstimate.deviceBrand);
+        form.setValue('issueDescription', 
+          `${parsedEstimate.issueType}${parsedEstimate.addons.length > 0 ? 
+            `. Additional services: ${parsedEstimate.addons.join(', ')}` : 
+            ''}`
+        );
+        
+        // Show toast notification
+        toast({
+          title: "Estimate loaded",
+          description: `Your repair estimate has been loaded. Estimated cost: $${parsedEstimate.estimatedPrice}`,
+        });
+      } catch (e) {
+        console.error('Error parsing saved estimate:', e);
+      }
+    }
+  }, []);
+  
+  // Helper function to convert device type labels to form values
+  const convertDeviceType = (deviceLabel: string): string => {
+    const map: {[key: string]: string} = {
+      'Smartphone': 'smartphone',
+      'Tablet': 'tablet',
+      'Laptop': 'computer',
+      'Desktop PC': 'computer',
+      'Smartwatch': 'other',
+      'TV / Monitor': 'other'
+    };
+    return map[deviceLabel] || 'other';
+  };
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
@@ -78,7 +134,32 @@ const Booking = () => {
 
   function onSubmit(data: BookingFormValues) {
     mutate(data);
+    // Clear the estimate after submission
+    if (hasEstimate) {
+      localStorage.removeItem('repairEstimate');
+      setHasEstimate(false);
+      setEstimateData(null);
+    }
   }
+  
+  // Function to clear the estimate and reset the form
+  const clearEstimate = () => {
+    localStorage.removeItem('repairEstimate');
+    setHasEstimate(false);
+    setEstimateData(null);
+    form.reset({
+      deviceType: '',
+      deviceModel: '',
+      issueDescription: '',
+      customerName: form.getValues('customerName'),
+      customerEmail: form.getValues('customerEmail'),
+      customerPhone: form.getValues('customerPhone'),
+    });
+    toast({
+      title: "Estimate cleared",
+      description: "The saved estimate has been cleared from your form."
+    });
+  };
 
   return (
     <div>
@@ -101,6 +182,62 @@ const Booking = () => {
             {/* Booking Form */}
             <div className="lg:w-1/2 p-8">
               <h2 className="text-2xl font-bold text-primary mb-6">Book a Repair</h2>
+              
+              {/* Show estimate if available */}
+              {hasEstimate && estimateData ? (
+                <div className="mb-6 p-4 bg-primary/10 rounded-lg border border-primary/20">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-semibold text-primary flex items-center">
+                      <Calculator className="inline-block mr-2 h-4 w-4" />
+                      Estimate from Calculator
+                    </h3>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={clearEstimate}
+                      className="h-7 text-xs text-muted-foreground"
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                  <div className="text-sm space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Device:</span>
+                      <span className="font-medium">{estimateData.deviceType} ({estimateData.deviceBrand})</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Issue:</span>
+                      <span className="font-medium">{estimateData.issueType}</span>
+                    </div>
+                    {estimateData.addons.length > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Add-ons:</span>
+                        <span className="font-medium">{estimateData.addons.join(', ')}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between pt-1 border-t mt-2">
+                      <span className="font-semibold">Estimated Price:</span>
+                      <span className="font-bold text-primary">${estimateData.estimatedPrice}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Estimated Time:</span>
+                      <span className="font-medium">{estimateData.estimatedTime}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border text-center">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Not sure about repair costs? Get an instant estimate first.
+                  </p>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/calculator">
+                      <Calculator className="mr-2 h-4 w-4" />
+                      Use Repair Calculator
+                    </Link>
+                  </Button>
+                </div>
+              )}
               
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

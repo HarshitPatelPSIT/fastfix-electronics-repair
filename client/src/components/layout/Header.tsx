@@ -38,6 +38,9 @@ const Header = () => {
             <Link href="/services" className={`${isActive('/services') ? 'text-primary' : 'text-neutral-dark'} hover:text-primary font-medium`}>
               Services
             </Link>
+            <Link href="/calculator" className={`${isActive('/calculator') ? 'text-primary' : 'text-neutral-dark'} hover:text-primary font-medium`}>
+              Repair Calculator
+            </Link>
             <Link href="/about" className={`${isActive('/about') ? 'text-primary' : 'text-neutral-dark'} hover:text-primary font-medium`}>
               About Us
             </Link>
@@ -79,6 +82,9 @@ const Header = () => {
             </Link>
             <Link href="/services" className="block py-2 text-neutral-dark hover:text-primary font-medium">
               Services
+            </Link>
+            <Link href="/calculator" className="block py-2 text-neutral-dark hover:text-primary font-medium">
+              Repair Calculator
             </Link>
             <Link href="/about" className="block py-2 text-neutral-dark hover:text-primary font-medium">
               About Us

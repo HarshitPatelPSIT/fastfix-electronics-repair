@@ -15,6 +15,7 @@ import Booking from "@/pages/Booking";
 import Blog from "@/pages/Blog";
 import Contact from "@/pages/Contact";
 import Dashboard from "@/pages/Dashboard";
+import RepairCalculator from "@/pages/RepairCalculator";
 
 function Router() {
   return (
@@ -29,6 +30,7 @@ function Router() {
           <Route path="/blog" component={Blog} />
           <Route path="/contact" component={Contact} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/calculator" component={RepairCalculator} />
           <Route component={NotFound} />
         </Switch>
       </main>
